@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FCP Case Building – Hulagpos</title>
+
+  <!-- ===== CSS GOES HERE ===== -->
+  <style>
+:root{
+  --bg: #0b1220;
+  --card: #0f172a;
+  --card2:#0b1326;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --accent:#38bdf8;
+  --good:#22c55e;
+  --warn:#f59e0b;
+  --bad:#ef4444;
+  --btn:#1f2937;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 700px at 20% 0%, #0f2a35, var(--bg));
+  color:var(--text);
+  padding:24px;
+  display:flex;
+  justify-content:center;
+}
+
+.app{
+  width: min(980px, 100%);
+  max-width: 980px;
+}
+
+/* ===== HEADER ===== */
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+h1{
+  margin:0;
+  font-size:22px;
+  letter-spacing:.2px;
+}
+.sub{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.status{
+  padding:8px 10px;
+  border-radius:10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  font-size:12px;
+  white-space:nowrap;
+}
+.status.ok{ border-color: rgba(34,197,94,.5); color: #bbf7d0; }
+.status.warn{ border-color: rgba(245,158,11,.6); color: #fde68a; }
+.status.bad{ border-color: rgba(239,68,68,.6); color: #fecaca; }
+.status.neutral{ color: var(--muted); }
+
+/* ===== CARDS ===== */
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+}
+
+.card h2{
+  margin:0 0 10px;
+  font-size:14px;
+  letter-spacing:.3px;
+  color:#dbeafe;
+}
+
+/* ===== SINGLE ROW FOR 2–3–4 ===== */
+.controls-row{
+  display:flex;
+  gap:12px;
+  align-items:stretch;
+  margin-bottom:12px;
+}
+
+.control-block{
+  flex:1;
+  min-width:220px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Responsive fallback */
+@media (max-width: 820px){
+  .controls-row{
+    flex-direction:column;
+  }
+}
+
+/* ===== ROW UTIL ===== */
+.row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+/* ===== DIGITS ===== */
+.digits{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:8px;
+}
+
+.digit{
+  background: var(--btn);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius:10px;
+  padding:10px 0;
+  color:var(--text);
+  cursor:pointer;
+  font-weight:600;
+}
+.digit.active{
+  background: rgba(34,197,94,.15);
+  border-color: rgba(34,197,94,.55);
+  color:#dcfce7;
+}
+
+/* ===== INPUTS ===== */
+select{
+  background: #0b1020;
+  border:1px solid rgba(255,255,255,.12);
+  color:var(--text);
+  padding:10px 10px;
+  border-radius:10px;
+  outline:none;
+  width:100%;
+}
+
+.radio{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.10);
+  padding:10px 10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.note{
+  margin:10px 0 0;
+  color: var(--muted);
+  font-size:12px;
+  line-height:1.35;
+}
+
+/* ===== MISC ===== */
+.hint{
+  color: var(--muted);
+  font-size:12px;
+  margin-left:auto;
+}
+
+.ghost{
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius:10px;
+  padding:9px 10px;
+  cursor:pointer;
+}
+.ghost:hover{ border-color: rgba(255,255,255,.25); }
+
+.primary{
+  width:100%;
+  padding:12px 14px;
+  border: none;
+  border-radius:14px;
+  background: linear-gradient(90deg, rgba(56,189,248,.95), rgba(59,130,246,.9));
+  color:#071018;
+  font-weight:800;
+  cursor:pointer;
+  letter-spacing:.3px;
+  margin: 6px 0 14px;
+}
+
+/* ===== OUTPUT ===== */
+.out{
+  background: linear-gradient(180deg, rgba(56,189,248,.08), rgba(255,255,255,.02));
+}
+
+.problem{
+  margin:0;
+  padding:12px;
+  border-radius:12px;
+  background: rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.10);
+  line-height:1.45;
+}
+
+.split{
+  display:grid;
+  grid-template-columns: 1.3fr .7fr;
+  gap:12px;
+  margin-top:12px;
+}
+@media (max-width: 820px){
+  .split{ grid-template-columns: 1fr; }
+}
+
+h3{
+  margin:0 0 8px;
+  font-size:13px;
+  color:#e0f2fe;
+}
+
+.steps{
+  margin:0;
+  padding:12px;
+  border-radius:12px;
+  background: rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.10);
+  min-height:140px;
+  white-space:pre-wrap;
+  line-height:1.5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size:12.5px;
+}
+
+.answerBox{
+  padding:14px;
+  border-radius:12px;
+  background: rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.big{
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:.5px;
+}
+.small{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* ===== FOOTER ===== */
+.foot{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  color: var(--muted);
+  font-size:12px;
+}
+.muted{ opacity:.9; }
+
+.answerInputRow{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+}
+.answerInputRow input{
+  flex:1;
+  background:#0b1020;
+  border:1px solid rgba(255,255,255,.15);
+  color:var(--text);
+  padding:12px;
+  border-radius:12px;
+}
+.smallBtn{width:auto}
+.feedback{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:10px;
+  font-size:13px;
+}
+.feedback.error{
+  background:rgba(239,68,68,.15);
+  border:1px solid rgba(239,68,68,.5);
+  color:#fecaca;
+}
+.feedback.success{
+  background:rgba(34,197,94,.15);
+  border:1px solid rgba(34,197,94,.5);
+  color:#bbf7d0;
+}
+.hidden{display:none}
+.actionRow{margin-top:10px}
+.badBtn{
+  border-color:rgba(239,68,68,.5);
+  color:#fecaca;
+}
+</details>
+  </style>
+</head>
+
+<body>
+
+  <!-- ===== HTML BODY GOES HERE ===== -->
+<div class="app">
+  <header class="top">
+    <div>
+      <h1> FCP Case Building: How many numbers? </h1>
+      <p class="sub"> © Hulagpos DOST Review 2026 </p>
+    </div>
+    <div id="status" class="status neutral">Ready</div>
+  </header>
+
+  <!-- STEP 1 -->
+  <section class="card">
+    <h2>Step 1) Select Digits</h2>
+    <div class="digits">
+      <button class="digit" data-digit="0">0</button>
+      <button class="digit" data-digit="1">1</button>
+      <button class="digit" data-digit="2">2</button>
+      <button class="digit" data-digit="3">3</button>
+      <button class="digit" data-digit="4">4</button>
+      <button class="digit" data-digit="5">5</button>
+      <button class="digit" data-digit="6">6</button>
+      <button class="digit" data-digit="7">7</button>
+      <button class="digit" data-digit="8">8</button>
+      <button class="digit" data-digit="9">9</button>
+    </div>
+
+    <div class="row">
+      <button id="selectAll" class="ghost">Select All</button>
+      <button id="clearAll" class="ghost">Clear</button>
+      <div class="hint" id="digitHint">Selected: none</div>
+    </div>
+  </section>
+
+  <!-- CONTROLS -->
+  <div class="controls-row">
+    <section class="card control-block">
+      <h2>2) Number of Digits</h2>
+      <select id="numDigits">
+        <option value="2">2-digit</option>
+        <option value="3" selected>3-digit</option>
+        <option value="4">4-digit</option>
+      </select>
+    </section>
+
+    <section class="card control-block">
+      <h2>3) Repetition</h2>
+      <label class="radio">
+        <input type="radio" name="rep" value="true" checked /> With repetition
+      </label>
+      <label class="radio">
+        <input type="radio" name="rep" value="false" /> Without repetition
+      </label>
+    </section>
+
+    <section class="card control-block">
+      <h2>4) Optional Additional Restrictions</h2>
+ <select id="restriction">
+  <option value="none">None</option>
+  <option value="even">Even</option>
+  <option value="odd">Odd</option>
+</select>
+      <p class="note">
+  Leading zero is not allowed.
+</p>
+    </section>
+  </div>
+
+  <button id="compute" class="primary">Generate Question</button>
+
+  <!-- OUTPUT / EXAM MODE -->
+  <section class="card out">
+    <h2>DOST 2026 Possible Question</h2>
+
+    <p id="problemText" class="problem">—</p>
+
+    <div class="answerInputRow">
+      <input id="userAnswer" type="number" placeholder="Enter your answer" />
+      <button id="submitAnswer" class="primary smallBtn">Submit</button>
+    </div>
+
+    <div id="feedback" class="feedback hidden"></div>
+
+    <div class="row actionRow hidden" id="actionButtons">
+      <button id="tryAgain" class="ghost">Try Again</button>
+      <button id="revealSolution" class="ghost">Reveal Solution</button>
+      <button id="restart" class="ghost badBtn">Restart</button>
+    </div>
+
+    <!-- SOLUTION -->
+    <div id="solutionBlock" class="hidden">
+      <div class="split">
+        <div>
+          <h3>via the Fundamental Counting Principle </h3>
+          <pre id="fcpSteps" class="steps">—</pre>
+        </div>
+        <div>
+          <h3>Correct Answer</h3>
+          <div class="answerBox">
+            <div class="big" id="answer">—</div>
+            <div class="small" id="verifyText">Verified by brute force</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+
+  <!-- ===== JAVASCRIPT GOES HERE ===== -->
+  <script>
+/*************************
+  STATE + UI
+*************************/
+const digitButtons = document.querySelectorAll(".digit");
+const digitHint = document.getElementById("digitHint");
+const statusEl = document.getElementById("status");
+
+let selectedDigits = [];
+
+function setStatus(type, text){
+  statusEl.className = `status ${type}`;
+  statusEl.textContent = text;
+}
+
+function sorted(arr){
+  return arr.slice().sort((a,b)=>a-b);
+}
+
+digitButtons.forEach(btn => {
+  btn.onclick = () => {
+    const d = +btn.dataset.digit;
+    btn.classList.toggle("active");
+    selectedDigits = btn.classList.contains("active")
+      ? [...selectedDigits, d]
+      : selectedDigits.filter(x => x !== d);
+
+    digitHint.textContent = selectedDigits.length
+      ? `Selected: {${sorted(selectedDigits).join(", ")}}`
+      : "Selected: none";
+  };
+});
+
+document.getElementById("selectAll").onclick = () => {
+  selectedDigits = [0,1,2,3,4,5,6,7,8,9];
+  digitButtons.forEach(b=>b.classList.add("active"));
+  digitHint.textContent = `Selected: {${selectedDigits.join(", ")}}`;
+};
+
+document.getElementById("clearAll").onclick = () => {
+  selectedDigits = [];
+  digitButtons.forEach(b=>b.classList.remove("active"));
+  digitHint.textContent = "Selected: none";
+};
+
+/*************************
+  WORD PROBLEM (REPHRASED FORMAT)
+*************************/
+function generateProblem(digits, k, repetition, restriction){
+  const rep = repetition ? "with repetition" : "without repetition";
+
+  // NEW FORMAT:
+  // "How many 3-digit numbers greater than 1000 can be formed using the digits {...} without repetition?"
+  let txt = `How many ${k}-digit numbers`;
+
+  if (restriction === "even") txt += " that are even";
+  if (restriction === "odd") txt += " that are odd";
+
+  if (restriction === "gt100") txt += " greater than 100";
+  if (restriction === "gt500") txt += " greater than 500";
+  if (restriction === "gt1000") txt += " greater than 1000";
+
+  txt += ` can be formed using the digits {${sorted(digits).join(", ")}} ${rep}?`;
+  return txt;
+}
+
+/*************************
+  IMPOSSIBLE “GREATER THAN” GUARD (NEW)
+*************************/
+function impossibleGreaterThan(k, restriction){
+  const min =
+    restriction === "gt100" ? 100 :
+    restriction === "gt500" ? 500 :
+    restriction === "gt1000" ? 1000 : null;
+
+  if (min === null) return false;
+
+  // max k-digit number = 10^k - 1
+  const maxPossible = Math.pow(10, k) - 1;
+
+  // Condition is "strictly greater than min"
+  // If min >= maxPossible, then there are 0 solutions.
+  return min >= maxPossible;
+}
+
+/*************************
+  BRUTE FORCE (TRUTH ENGINE)
+*************************/
+function bruteForceCount(digits, k, repetition, restriction){
+  const minVal =
+    restriction === "gt100" ? 100 :
+    restriction === "gt500" ? 500 :
+    restriction === "gt1000" ? 1000 : null;
+
+  let count = 0;
+
+  function valid(s){
+    if (s.length !== k) return false;
+    if (s[0] === "0") return false;
+    const n = +s;
+    if (restriction === "even" && n % 2 !== 0) return false;
+    if (restriction === "odd" && n % 2 !== 1) return false;
+    if (minVal !== null && n <= minVal) return false;
+    return true;
+  }
+
+  function build(pos, used, s){
+    if (pos === k){
+      if (valid(s)) count++;
+      return;
+    }
+    for (const d of digits){
+      if (pos === 0 && d === 0) continue;
+      if (!repetition && used.has(d)) continue;
+      used.add(d);
+      build(pos+1, used, s+d);
+      if (!repetition) used.delete(d);
+    }
+  }
+
+  build(0, new Set(), "");
+  return count;
+}
+
+/*************************
+  GENERAL FCP (DEFAULT)
+*************************/
+function generalFCP(digits, k, repetition, restriction){
+  const d = sorted(digits);
+  const steps = [];
+  let total = 1;
+  let used = 0;
+
+  if (!repetition && d.length < k){
+    return { answer: 0, steps: ["Not enough distinct digits available."] };
+  }
+
+  if (restriction === "even" || restriction === "odd"){
+    const valid = d.filter(x => restriction === "even" ? x % 2 === 0 : x % 2 === 1);
+    if (!valid.length) return { answer: 0, steps: ["No valid units digit."] };
+    total *= valid.length;
+    steps.push(`Units digit (${restriction}): ${valid.length} choices`);
+    if (!repetition) used++;
+  }
+
+  const lead = d.filter(x => x !== 0);
+  const leadChoices = repetition ? lead.length : lead.length - used;
+  if (leadChoices <= 0) return { answer: 0, steps: ["No valid leading digit."] };
+  total *= leadChoices;
+  steps.push(`Leading digit (non-zero): ${leadChoices} choices`);
+  if (!repetition) used++;
+
+  const remaining = k - steps.length;
+  for (let i=0;i<remaining;i++){
+    const c = repetition ? d.length : d.length - used;
+    total *= c;
+    steps.push(`Next digit: ${c} choices`);
+    if (!repetition) used++;
+  }
+
+  return { answer: total, steps };
+}
+
+/*************************
+  ODD + NO REP (LINEAR FCP)
+*************************/
+function explainOddNoRep(digits, k){
+  const d = sorted(digits);
+  const odd = d.filter(x => x % 2 === 1);
+  const nonZero = d.filter(x => x !== 0);
+  const steps = [];
+
+  if (!odd.length){
+    return { answer: 0, steps: ["No odd digit available."] };
+  }
+
+  steps.push(`✓ Step 1: Units digit (must be odd)`);
+  steps.push(`Odd digits: {${odd.join(", ")}} → ${odd.length} choices`);
+  steps.push(``);
+
+  const thousands = nonZero.length - 1;
+  if (thousands <= 0){
+    return { answer: 0, steps: ["No valid thousands digit."] };
+  }
+
+  steps.push(`✓ Step 2: Thousands digit (cannot be 0 and cannot repeat)`);
+  steps.push(`From {${nonZero.join(", ")}}, exclude chosen units digit → ${thousands} choices`);
+  steps.push(``);
+
+  let used = 2;
+  let total = odd.length * thousands;
+  let factors = [odd.length, thousands];
+
+  const placeNames = ["Hundreds", "Tens"];
+  for (let i = 0; i < k - 2; i++){
+    const rem = d.length - used;
+    total *= rem;
+    factors.push(rem);
+    steps.push(`✓ Step ${i+3}: ${placeNames[i]} digit`);
+    steps.push(`Remaining digits (including 0) → ${rem} choices`);
+    steps.push(``);
+    used++;
+  }
+
+  steps.push(`📌 Total Count`);
+  steps.push(`${factors.join(" × ")} = ${total}`);
+
+  return { answer: total, steps };
+}
+
+/*************************
+  EVEN + NO REP + ZERO (CASEWORK)
+*************************/
+function explainEvenNoRepZero(digits, k){
+  const d = sorted(digits);
+  const even = d.filter(x => x % 2 === 0);
+  const nz = d.filter(x => x !== 0);
+  const nzEven = even.filter(x => x !== 0);
+  const steps = [];
+
+  steps.push(`✓ Step 1: Units digit (must be even)`);
+  steps.push(`Even digits: {${even.join(", ")}} → ${even.length} choices`);
+  steps.push(``);
+  steps.push(`We consider two cases because 0 cannot be placed in the thousands digit.`);
+  steps.push(``);
+
+  /* Case 1: units = 0 */
+  const ones1 = 1;
+  const thousands1 = nz.length;
+  let used1 = 2;
+  let factors1 = [thousands1, ones1];
+  let total1 = thousands1 * ones1;
+
+  const placeNames = ["Hundreds", "Tens"];
+  for (let i = 0; i < k - 2; i++){
+    const rem = d.length - used1;
+    total1 *= rem;
+    factors1.splice(1,0,rem);
+    used1++;
+  }
+
+  steps.push(`✔ Case 1: Units digit = 0`);
+  steps.push(`• Thousands digit: cannot be 0 → ${thousands1} choices`);
+  for (let i = 0; i < k - 2; i++){
+    steps.push(`• ${placeNames[i]} digit: remaining ${d.length - 2 - i} choices`);
+  }
+  steps.push(`• Ones digit: 1 choice (0)`);
+  steps.push(`${factors1.join(" × ")} = ${total1}`);
+  steps.push(``);
+
+  /* Case 2: units ≠ 0 */
+  const ones2 = nzEven.length;
+  const thousands2 = nz.length - 1;
+  let used2 = 2;
+  let factors2 = [thousands2, ones2];
+  let total2 = thousands2 * ones2;
+
+  for (let i = 0; i < k - 2; i++){
+    const rem = d.length - used2;
+    total2 *= rem;
+    factors2.splice(1,0,rem);
+    used2++;
+  }
+
+  steps.push(`✔ Case 2: Units digit = ${nzEven.join(", ")}`);
+  steps.push(`• Thousands digit: cannot be 0 and cannot repeat units → ${thousands2} choices`);
+  for (let i = 0; i < k - 2; i++){
+    steps.push(`• ${placeNames[i]} digit: remaining ${d.length - 2 - i} choices`);
+  }
+  steps.push(`• Ones digit: ${ones2} choices`);
+  steps.push(`${factors2.join(" × ")} = ${total2}`);
+  steps.push(``);
+  steps.push(`📌 Total Count`);
+  steps.push(`${total1} + ${total2} = ${total1 + total2}`);
+
+  return { answer: total1 + total2, steps };
+}
+
+/*************************
+  EXAM MODE ADD-ON (NEW)
+*************************/
+let __correctAnswer = null;
+
+const userAnswerEl = document.getElementById("userAnswer");
+const feedbackEl = document.getElementById("feedback");
+const actionButtonsEl = document.getElementById("actionButtons");
+const solutionBlockEl = document.getElementById("solutionBlock");
+
+function resetExamUI(){
+  userAnswerEl.value = "";
+  feedbackEl.classList.add("hidden");
+  actionButtonsEl.classList.add("hidden");
+  solutionBlockEl.classList.add("hidden");
+}
+
+/*************************
+  MASTER COMPUTE
+*************************/
+document.getElementById("compute").onclick = () => {
+  if (!selectedDigits.length){
+    alert("Select digits first.");
+    return;
+  }
+
+  const k = +document.getElementById("numDigits").value;
+  const repetition = document.querySelector("input[name='rep']:checked").value === "true";
+  const restriction = document.getElementById("restriction").value;
+  const digits = sorted(selectedDigits);
+
+  const problem = generateProblem(digits, k, repetition, restriction);
+
+  // NEW: stop fake FCP on impossible “greater than” cases
+  if (impossibleGreaterThan(k, restriction)){
+    const low = Math.pow(10, k-1);
+    const high = Math.pow(10, k) - 1;
+
+    __correctAnswer = 0;
+
+    document.getElementById("problemText").textContent = problem;
+    document.getElementById("fcpSteps").textContent =
+      `This condition is impossible.\n\n` +
+      `${k}-digit numbers range from ${low} to ${high}.\n` +
+      `So there are 0 numbers satisfying the “greater than …” condition.`;
+    document.getElementById("answer").textContent = "0";
+    document.getElementById("verifyText").textContent = "Correct by definition.";
+    setStatus("ok", "Impossible case ✓");
+
+    resetExamUI();
+    return;
+  }
+
+  let fcp;
+  if (restriction === "odd" && !repetition){
+    fcp = explainOddNoRep(digits, k);
+  } else if (restriction === "even" && !repetition && digits.includes(0)){
+    fcp = explainEvenNoRepZero(digits, k);
+  } else {
+    fcp = generalFCP(digits, k, repetition, restriction);
+  }
+
+  const brute = bruteForceCount(digits, k, repetition, restriction);
+  __correctAnswer = brute;
+
+  document.getElementById("problemText").textContent = problem;
+  document.getElementById("fcpSteps").textContent = fcp.steps.join("\n");
+  document.getElementById("answer").textContent = brute.toLocaleString();
+
+  if (fcp.answer === brute){
+    setStatus("ok", "Verified ✓");
+    document.getElementById("verifyText").textContent = "FCP matches brute force.";
+  } else {
+    setStatus("warn", "Mismatch ⚠");
+    document.getElementById("verifyText").textContent =
+      `FCP: ${fcp.answer}, Brute: ${brute}`;
+  }
+
+  resetExamUI();
+};
+
+document.getElementById("submitAnswer").onclick = () => {
+  if (__correctAnswer === null){
+    feedbackEl.textContent = "Generate a question first.";
+    feedbackEl.className = "feedback error";
+    feedbackEl.classList.remove("hidden");
+    return;
+  }
+
+  if (!userAnswerEl.value){
+    feedbackEl.textContent = "Please enter an answer.";
+    feedbackEl.className = "feedback error";
+    feedbackEl.classList.remove("hidden");
+    return;
+  }
+
+  const guess = Number(userAnswerEl.value);
+
+  if (guess === __correctAnswer){
+    feedbackEl.textContent = "Correct! 🎉 Showing solution.";
+    feedbackEl.className = "feedback success";
+    feedbackEl.classList.remove("hidden");
+    solutionBlockEl.classList.remove("hidden");
+    actionButtonsEl.classList.remove("hidden");
+  } else {
+    feedbackEl.textContent = "Incorrect. Try again or reveal the solution.";
+    feedbackEl.className = "feedback error";
+    feedbackEl.classList.remove("hidden");
+    actionButtonsEl.classList.remove("hidden");
+  }
+};
+
+document.getElementById("tryAgain").onclick = () => {
+  userAnswerEl.value = "";
+  feedbackEl.classList.add("hidden");
+};
+
+document.getElementById("revealSolution").onclick = () => {
+  solutionBlockEl.classList.remove("hidden");
+};
+
+document.getElementById("restart").onclick = () => {
+  location.reload();
+};
+
+setStatus("neutral", "Ready");
+
+  </script>
+
+</body>
+</html>
